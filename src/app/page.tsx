@@ -26,7 +26,7 @@ export default function Home() {
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
-              onClick={() => push("/cadastro")}
+              onClick={() => push("/register")}
               size="lg"
               className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-xl h-14 text-lg px-8"
             >
