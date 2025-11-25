@@ -7,29 +7,44 @@ import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { api } from "@/lib/api";
 
 export default function Register () {
   const {push} = useRouter();
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleCadastro = (e: React.FormEvent) => {
+  const handleCadastro = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!nome || !email || !password) {
       toast.error("Preencha todos os campos");
       return;
     }
 
-    if (password.length < 6) {
-      toast.error("A senha deve ter no mínimo 6 caracteres");
+    if (password.length < 8) {
+      toast.error("A senha deve ter no mínimo 8 caracteres");
       return;
     }
 
-    // Simulação de cadastro - será substituído por autenticação real
-    toast.success("Conta criada com sucesso!");
-    push("/dashboard");
+    setLoading(true);
+
+    try {
+      await api.register({
+        name: nome,
+        email,
+        password,
+      });
+
+      toast.success("Conta criada com sucesso!");
+      push("/login");
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao criar conta");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -74,15 +89,15 @@ export default function Register () {
               <Input
                 id="password"
                 type="password"
-                placeholder="Mínimo 6 caracteres"
+                placeholder="Mínimo 8 caracteres"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="rounded-lg"
               />
             </div>
 
-            <Button type="submit" className="w-full rounded-xl h-12">
-              Criar Conta
+            <Button type="submit" className="w-full rounded-xl h-12" disabled={loading}>
+              {loading ? "Criando conta..." : "Criar Conta"}
             </Button>
           </form>
 

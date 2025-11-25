@@ -1,11 +1,13 @@
 'use client'
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/Logo";
 import { ArrowUpRight, ArrowDownRight, Plus, Send, LogOut } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { formatCurrency } from "@/lib/utils/formatCurrency";
 
 interface Transaction {
   id: number;
@@ -16,25 +18,33 @@ interface Transaction {
 }
 
 export default function Dashboard () {
-  const {push} = useRouter();
-  const [saldo] = useState(2500.00);
-  const [transacoes] = useState<Transaction[]>([
-    { id: 1, tipo: "deposito", valor: 1000.00, data: "2025-11-24 10:30", status: "concluido" },
-    { id: 2, tipo: "transferencia_enviada", valor: 150.00, data: "2025-11-23 15:20", status: "concluido" },
-    { id: 3, tipo: "transferencia_recebida", valor: 500.00, data: "2025-11-23 09:15", status: "concluido" },
-    { id: 4, tipo: "deposito", valor: 1150.00, data: "2025-11-22 14:00", status: "concluido" },
-  ]);
+  const { user, isLoading, isAuthenticated, logout } = useAuth();
+  const router = useRouter();
 
-  const handleLogout = () => {
-    push("/login");
-  };
+  const [transacoes] = useState<Transaction[]>([]);
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push('/login');
+    }
+  }, [isLoading, isAuthenticated, router]);
+
+  if (isLoading || !user) {
+    return (
+      <div className="min-h-screen bg-muted flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-muted">
       <header className="bg-card shadow-sm">
         <div className="max-w-3xl mx-auto px-4 py-4 flex justify-between items-center">
           <Logo />
-          <Button variant="ghost" size="icon" onClick={handleLogout}>
+          <Button variant="ghost" size="icon" onClick={logout}>
             <LogOut className="w-5 h-5" />
           </Button>
         </div>
@@ -48,18 +58,18 @@ export default function Dashboard () {
           </CardHeader>
           <CardContent>
             <div className="text-4xl font-bold mb-6">
-              R$ {saldo.toFixed(2).replace('.', ',')}
+              R$ {formatCurrency(user.balance)}
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <Button 
-                onClick={() => push("/deposito")}
+              <Button
+                onClick={() => router.push("/deposito")}
                 className="bg-success hover:bg-success/90 text-success-foreground rounded-xl h-12 gap-2"
               >
                 <Plus className="w-5 h-5" />
                 Depositar
               </Button>
-              <Button 
-                onClick={() => push("/transferencia")}
+              <Button
+                onClick={() => router.push("/transferencia")}
                 className="bg-card text-primary hover:bg-card/90 rounded-xl h-12 gap-2"
               >
                 <Send className="w-5 h-5" />
@@ -73,16 +83,21 @@ export default function Dashboard () {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Transações Recentes</CardTitle>
-            <Button 
-              variant="link" 
-              onClick={() => push("/extrato")}
+            <Button
+              variant="link"
+              onClick={() => router.push("/extrato")}
               className="text-primary"
             >
               Ver todas
             </Button>
           </CardHeader>
           <CardContent className="space-y-3">
-            {transacoes.slice(0, 4).map((transacao) => (
+            {transacoes.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">
+                Nenhuma transação ainda
+              </p>
+            ) : (
+              transacoes.slice(0, 4).map((transacao) => (
               <div 
                 key={transacao.id}
                 className="flex items-center justify-between p-3 bg-muted rounded-lg hover:bg-muted/70 transition-colors"
@@ -117,7 +132,8 @@ export default function Dashboard () {
                   R$ {transacao.valor.toFixed(2).replace('.', ',')}
                 </div>
               </div>
-            ))}
+              ))
+            )}
           </CardContent>
         </Card>
       </main>
