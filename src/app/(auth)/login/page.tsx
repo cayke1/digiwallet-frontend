@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
 
-export default function Login () {
+export default function Login() {
   const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,9 +26,7 @@ export default function Login () {
     setIsLoading(true);
     try {
       await login(email, password);
-      // Redirect acontece no AuthContext
     } catch (error) {
-      // Erro já mostrado no AuthContext
     } finally {
       setIsLoading(false);
     }
@@ -41,7 +39,7 @@ export default function Login () {
           <div className="flex justify-center mb-8">
             <Logo />
           </div>
-          
+
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="email">E-mail</Label>
@@ -69,7 +67,11 @@ export default function Login () {
               />
             </div>
 
-            <Button type="submit" className="w-full rounded-xl h-12" disabled={isLoading}>
+            <Button
+              type="submit"
+              className="w-full rounded-xl h-12"
+              disabled={isLoading}
+            >
               {isLoading ? "Entrando..." : "Entrar"}
             </Button>
           </form>
@@ -86,4 +88,4 @@ export default function Login () {
       </div>
     </div>
   );
-};
+}

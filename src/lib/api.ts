@@ -22,8 +22,8 @@ class ApiError extends Error {
 }
 
 export const api = {
-  async register(data: RegisterData): Promise<User> {
-    const response = await fetch(`${API_URL}/auth/register`, {
+  async register(data: RegisterData): Promise<AuthResponse> {
+    const response = await authFetch(`${API_URL}/auth/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

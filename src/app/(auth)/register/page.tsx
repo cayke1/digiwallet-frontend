@@ -1,17 +1,17 @@
-'use client'
+"use client";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
 
-export default function Register () {
-  const {push} = useRouter();
-  const [nome, setNome] = useState("");
+export default function Register() {
+  const { register } = useAuth();
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -19,7 +19,7 @@ export default function Register () {
   const handleCadastro = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!nome || !email || !password) {
+    if (!name || !email || !password) {
       toast.error("Preencha todos os campos");
       return;
     }
@@ -32,16 +32,8 @@ export default function Register () {
     setLoading(true);
 
     try {
-      await api.register({
-        name: nome,
-        email,
-        password,
-      });
-
-      toast.success("Conta criada com sucesso!");
-      push("/login");
-    } catch (error: any) {
-      toast.error(error.message || "Erro ao criar conta");
+      await register(name, email, password);
+    } catch (error) {
     } finally {
       setLoading(false);
     }
@@ -54,20 +46,20 @@ export default function Register () {
           <div className="flex justify-center mb-8">
             <Logo />
           </div>
-          
+
           <h2 className="text-2xl font-bold text-center mb-6 text-foreground">
             Criar Conta
           </h2>
 
           <form onSubmit={handleCadastro} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="nome">Nome completo</Label>
+              <Label htmlFor="name">Name completo</Label>
               <Input
-                id="nome"
+                id="name"
                 type="text"
-                placeholder="Seu nome"
-                value={nome}
-                onChange={(e) => setNome(e.target.value)}
+                placeholder="Seu name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 className="rounded-lg"
               />
             </div>
@@ -96,14 +88,18 @@ export default function Register () {
               />
             </div>
 
-            <Button type="submit" className="w-full rounded-xl h-12" disabled={loading}>
+            <Button
+              type="submit"
+              className="w-full rounded-xl h-12"
+              disabled={loading}
+            >
               {loading ? "Criando conta..." : "Criar Conta"}
             </Button>
           </form>
 
           <div className="mt-6 text-center">
             <Link
-              href="/login" 
+              href="/login"
               className="text-sm text-primary hover:underline"
             >
               Já tem conta? Entrar
@@ -113,4 +109,4 @@ export default function Register () {
       </div>
     </div>
   );
-};
+}
