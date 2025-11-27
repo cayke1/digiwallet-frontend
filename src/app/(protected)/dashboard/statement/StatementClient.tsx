@@ -41,7 +41,7 @@ interface TransactionDisplay {
   podeReverter: boolean;
 }
 
-export default function StatementClient({
+export function StatementClient({
   initialTransactions,
   currentUserId,
 }: StatementClientProps) {
