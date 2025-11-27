@@ -84,13 +84,12 @@ export default function Dashboard () {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Transações Recentes</CardTitle>
-            <Button
-              variant="link"
-              onClick={() => router.push("/extrato")}
+            <Link
+              href={"/dashboard/statement"}
               className="text-primary"
             >
               Ver todas
-            </Button>
+            </Link>
           </CardHeader>
           <CardContent className="space-y-3">
             {transacoes.length === 0 ? (
