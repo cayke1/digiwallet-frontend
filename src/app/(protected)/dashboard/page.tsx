@@ -69,13 +69,13 @@ export default function Dashboard () {
                 <Plus className="w-5 h-5" />
                 <span>Depositar</span>
               </Link>
-              <Button
-                onClick={() => router.push("/transferencia")}
-                className="bg-card text-primary hover:bg-card/90 rounded-xl h-12 gap-2"
+              <Link
+                href={"/dashboard/transfer"}
+                className="bg-card text-primary hover:bg-card/90 rounded-xl h-12 gap-2 flex items-center justify-center font-semibold"
               >
                 <Send className="w-5 h-5" />
-                Transferir
-              </Button>
+               <span>Transferir</span>
+              </Link>
             </div>
           </CardContent>
         </Card>
