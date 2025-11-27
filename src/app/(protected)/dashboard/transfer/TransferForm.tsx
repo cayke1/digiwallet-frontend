@@ -2,7 +2,6 @@
 
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { useBrazilianCurrency } from "@/hooks/useBrazilianCurrency";
 import { transferTransaction } from "@/actions/transactions/transfer";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,20 +12,26 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { MoneyInput } from "@/components/form/MoneyInput";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
 export function TransferForm() {
   const { push } = useRouter();
   const [emailDestino, setEmailDestino] = useState("");
+  const [amount, setAmount] = useState("");
+  const [displayAmount, setDisplayAmount] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const { displayValue, apiValue, handleChange } = useBrazilianCurrency();
+  const handleAmountChange = (formatted: string, raw: string) => {
+    setDisplayAmount(formatted);
+    setAmount(raw);
+  };
 
   const handleTransferencia = async (e: FormEvent) => {
     e.preventDefault();
 
-    const numericValue = parseFloat(apiValue);
+    const numericValue = parseFloat(amount);
 
     if (!emailDestino || !numericValue) {
       toast.error("Preencha todos os campos");
@@ -47,14 +52,14 @@ export function TransferForm() {
 
     const result = await transferTransaction({
       toUserEmail: emailDestino,
-      amount: apiValue,
+      amount: amount,
     });
 
     setIsLoading(false);
 
     if (result.success) {
       toast.success(
-        `Transferência de R$ ${displayValue} enviada com sucesso!`
+        `Transferência de ${displayAmount} enviada com sucesso!`
       );
       push("/dashboard");
     } else {
@@ -97,23 +102,15 @@ export function TransferForm() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="valor">Valor</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                    R$
-                  </span>
-                  <Input
-                    id="valor"
-                    type="text"
-                    placeholder="0,00"
-                    value={displayValue}
-                    onChange={handleChange}
-                    disabled={isLoading}
-                    className="pl-10 rounded-lg text-2xl h-16 text-right"
-                  />
-                </div>
-              </div>
+              <MoneyInput
+                id="valor"
+                label="Valor"
+                placeholder="R$ 0,00"
+                value={displayAmount}
+                onChange={handleAmountChange}
+                disabled={isLoading}
+                className="rounded-lg text-2xl text-right"
+              />
 
               <div className="bg-muted p-4 rounded-lg">
                 <p className="text-sm text-muted-foreground">
