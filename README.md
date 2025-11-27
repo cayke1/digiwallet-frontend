@@ -1,4 +1,4 @@
-# Carteira Financeira - Interface Frontend
+# DigiWallet - Frontend
 
 Esta aplicação implementa a interface de usuário para o gerenciamento de uma carteira digital, permitindo que os usuários realizem operações financeiras como depósitos, transferências e reversões de transações.
 
