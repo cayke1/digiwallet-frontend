@@ -1,29 +1,35 @@
 'use client'
+import { useState, FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
+import { useBrazilianCurrency } from "@/hooks/useBrazilianCurrency";
+import { transferTransaction } from "@/actions/transactions/transfer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
 import { toast } from "sonner";
 
 export default function Transfer() {
+  const { refreshUser } = useAuth();
   const { push } = useRouter();
   const [emailDestino, setEmailDestino] = useState("");
-  const [valor, setValor] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleTransferencia = (e: React.FormEvent) => {
+  const { displayValue, apiValue, handleChange } = useBrazilianCurrency();
+
+  const handleTransferencia = async (e: FormEvent) => {
     e.preventDefault();
-    
-    const valorNumerico = parseFloat(valor.replace(',', '.'));
-    
-    if (!emailDestino || !valor) {
+
+    const numericValue = parseFloat(apiValue);
+
+    if (!emailDestino || !numericValue) {
       toast.error("Preencha todos os campos");
       return;
     }
 
-    if (valorNumerico <= 0) {
+    if (numericValue <= 0) {
       toast.error("Digite um valor válido");
       return;
     }
@@ -33,8 +39,22 @@ export default function Transfer() {
       return;
     }
 
-    toast.success(`Transferência de R$ ${valorNumerico.toFixed(2).replace('.', ',')} enviada com sucesso!`);
-    push    ("/dashboard");
+    setIsLoading(true);
+
+    const result = await transferTransaction({
+      toUserEmail: emailDestino,
+      amount: apiValue
+    });
+
+    setIsLoading(false);
+
+    if (result.success) {
+      await refreshUser();
+      toast.success(`Transferência de R$ ${displayValue} enviada com sucesso!`);
+      push("/dashboard");
+    } else {
+      toast.error(result.error);
+    }
   };
 
   return (
@@ -63,6 +83,7 @@ export default function Transfer() {
                   placeholder="destinatario@email.com"
                   value={emailDestino}
                   onChange={(e) => setEmailDestino(e.target.value)}
+                  disabled={isLoading}
                   className="rounded-lg"
                 />
               </div>
@@ -77,11 +98,9 @@ export default function Transfer() {
                     id="valor"
                     type="text"
                     placeholder="0,00"
-                    value={valor}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/[^\d,]/g, '');
-                      setValor(value);
-                    }}
+                    value={displayValue}
+                    onChange={handleChange}
+                    disabled={isLoading}
                     className="pl-10 rounded-lg text-2xl h-16 text-right"
                   />
                 </div>
@@ -93,11 +112,12 @@ export default function Transfer() {
                 </p>
               </div>
 
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
+                disabled={isLoading}
                 className="w-full rounded-xl h-12"
               >
-                Enviar
+                {isLoading ? "Processando..." : "Enviar"}
               </Button>
             </form>
           </CardContent>
