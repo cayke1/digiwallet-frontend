@@ -1,6 +1,7 @@
 "use server";
 
-import { cookies } from "next/headers";
+import { revalidatePath } from "next/cache";
+import { getUserByEmail, transferToUser } from "@/services/transfer.service";
 import type { ActionResult } from "./types";
 
 export interface TransferInput {
@@ -19,96 +20,37 @@ export interface TransferResponse {
   };
 }
 
-async function getUserByEmail(email: string, accessToken: string): Promise<{ id: string } | null> {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-
-  try {
-    const response = await fetch(`${apiUrl}/users/email?email=${encodeURIComponent(email)}`, {
-      method: "GET",
-      headers: {
-        Cookie: `accessToken=${accessToken}`,
-      },
-    });
-
-    if (!response.ok) {
-      return null;
-    }
-
-    const user = await response.json();
-    return user;
-  } catch (error) {
-    console.error("Error fetching user by email:", error);
-    return null;
-  }
-}
-
 export async function transferTransaction(
   input: TransferInput
 ): Promise<ActionResult<TransferResponse>> {
-  try {
-    const cookieStore = await cookies();
-    const accessToken = cookieStore.get("accessToken")?.value;
+  const userResult = await getUserByEmail(input.toUserEmail);
 
-    if (!accessToken) {
-      return {
-        success: false,
-        error: "Não autenticado. Faça login novamente.",
-        status: 401
-      };
-    }
-
-    const destinatario = await getUserByEmail(input.toUserEmail, accessToken);
-
-    if (!destinatario) {
-      return {
-        success: false,
-        error: "Usuário destinatário não encontrado.",
-        status: 404
-      };
-    }
-
-    const idempotencyKey = crypto.randomUUID();
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-
-    const response = await fetch(`${apiUrl}/transactions/transfer`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "idempotency-key": idempotencyKey,
-        Cookie: `accessToken=${accessToken}`,
-      },
-      body: JSON.stringify({
-        toUserId: destinatario.id,
-        amount: input.amount,
-      }),
-    });
-
-    if (!response.ok) {
-      if (response.status === 401) {
-        return {
-          success: false,
-          error: "Sessão expirada. Faça login novamente.",
-          status: 401
-        };
-      }
-
-      let errorMessage = "Erro ao processar transferência";
-      try {
-        const errorData = await response.json();
-        errorMessage = errorData.message || errorMessage;
-      } catch {}
-
-      return { success: false, error: errorMessage, status: response.status };
-    }
-
-    const data = await response.json();
-    return { success: true, data };
-  } catch (error) {
-    console.error("Transfer transaction error:", error);
+  if (!userResult.success || !userResult.data) {
     return {
       success: false,
-      error: "Erro de conexão. Verifique sua internet e tente novamente.",
-      status: 500
+      error: userResult.error || "Usuário destinatário não encontrado.",
+      status: userResult.status || 404,
     };
   }
+
+  const transferResult = await transferToUser({
+    toUserId: userResult.data.id,
+    amount: input.amount,
+  });
+
+  if (!transferResult.success) {
+    return {
+      success: false,
+      error: transferResult.error || "Erro ao processar transferência.",
+      status: transferResult.status || 500,
+    };
+  }
+
+  revalidatePath("/dashboard");
+
+  return {
+    success: true,
+    data: transferResult.data,
+    status: 200,
+  };
 }

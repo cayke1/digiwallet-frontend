@@ -1,7 +1,7 @@
 import { fetchTransactionHistory } from "@/actions/transactions/history";
 import { fetchCurrentUser } from "@/actions/user/me";
 import { redirect } from "next/navigation";
-import StatementClient from "./StatementClient";
+import { StatementClient } from "./StatementClient";
 
 export default async function StatementPage() {
   const [userResult, historyResult] = await Promise.all([

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,16 +41,27 @@ interface TransactionDisplay {
   podeReverter: boolean;
 }
 
-export default function StatementClient({
+export function StatementClient({
   initialTransactions,
   currentUserId,
 }: StatementClientProps) {
-  const { push } = useRouter();
+  const router = useRouter();
+  const { push } = router;
   const [showRevertDialog, setShowRevertDialog] = useState(false);
   const [selectedTransaction, setSelectedTransaction] =
     useState<TransactionDisplay | null>(null);
   const [reversalDescription, setReversalDescription] = useState("");
   const [isReverting, setIsReverting] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        router.refresh();
+      }
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [router]);
 
   const transactions = useMemo(() => {
     const mainTransactions = initialTransactions.filter(
