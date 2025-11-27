@@ -1,6 +1,4 @@
-export type ActionResult<T> =
-  | { success: true; data: T }
-  | { success: false; error: string, status: number };
+export type ActionResult<T> = { success: boolean; data?: T; error?: string, status?: number };
 
 export interface DepositResponse {
   transaction: {
