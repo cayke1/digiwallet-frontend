@@ -64,10 +64,10 @@ export default function Dashboard () {
             <div className="grid grid-cols-2 gap-3">
               <Link
                 href={"/dashboard/deposit"}
-                className="bg-success hover:bg-success/90 text-success-foreground rounded-xl h-12 gap-2"
+                className="bg-success hover:bg-success/90 text-success-foreground rounded-xl h-12 gap-2 flex items-center justify-center font-semibold"
               >
                 <Plus className="w-5 h-5" />
-                Depositar
+                <span>Depositar</span>
               </Link>
               <Button
                 onClick={() => router.push("/transferencia")}
