@@ -27,9 +27,47 @@ type CustomHeaderInit = HeadersInit & {
   "Cookie"?: string;
 }
 
+async function refreshAccessTokenServer(): Promise<string | null> {
+  try {
+    const cookieStore = await cookies();
+    const refreshToken = cookieStore.get("refreshToken")?.value;
+
+    if (!refreshToken) {
+      return null;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+      method: "POST",
+      headers: {
+        "Cookie": `refreshToken=${refreshToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const setCookieHeader = response.headers.get("set-cookie");
+    if (!setCookieHeader) {
+      return null;
+    }
+
+    const accessTokenMatch = setCookieHeader.match(/accessToken=([^;]+)/);
+    if (!accessTokenMatch) {
+      return null;
+    }
+
+    return accessTokenMatch[1];
+  } catch (error) {
+    console.error("Error refreshing token:", error);
+    return null;
+  }
+}
+
 export async function apiClient<T = unknown>(
   endpoint: string,
-  options: ApiClientOptions = {}
+  options: ApiClientOptions = {},
+  isRetry: boolean = false
 ): Promise<T> {
   const {
     requireAuth = true,
@@ -43,7 +81,6 @@ export async function apiClient<T = unknown>(
     ...customHeaders,
   };
 
-
   if (requireAuth) {
     const cookieStore = await cookies();
     const accessToken = cookieStore.get("accessToken")?.value;
@@ -54,7 +91,6 @@ export async function apiClient<T = unknown>(
 
     headers["Cookie"] = `accessToken=${accessToken}`;
   }
-
 
   if (idempotencyKey) {
     headers["idempotency-key"] = crypto.randomUUID();
@@ -69,6 +105,29 @@ export async function apiClient<T = unknown>(
     });
 
     if (!response.ok) {
+      if (response.status === 401 && !isRetry && requireAuth) {
+        const newAccessToken = await refreshAccessTokenServer();
+
+        if (newAccessToken) {
+          const retryHeaders: CustomHeaderInit = {
+            ...headers,
+            "Cookie": `accessToken=${newAccessToken}`,
+          };
+
+          const retryResponse = await fetch(url, {
+            ...fetchOptions,
+            headers: retryHeaders,
+          });
+
+          if (retryResponse.ok) {
+            if (retryResponse.status === 204) {
+              return undefined as T;
+            }
+            return await retryResponse.json();
+          }
+        }
+      }
+
       let errorMessage = "Erro ao processar requisição";
 
       try {
@@ -89,7 +148,6 @@ export async function apiClient<T = unknown>(
     if (error instanceof ApiClientError) {
       throw error;
     }
-
 
     if (error instanceof TypeError && error.message.includes("fetch")) {
       throw new ApiClientError(

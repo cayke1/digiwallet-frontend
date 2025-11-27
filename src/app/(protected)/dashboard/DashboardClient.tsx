@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,16 @@ export function DashboardClient({
 }: DashboardClientProps) {
   const { logout } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        router.refresh();
+      }
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [router]);
 
   const handleLogout = async () => {
     await logout();
