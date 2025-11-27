@@ -27,6 +27,75 @@ A interface suporta as seguintes funcionalidades principais:
 | Zustand      | Gerenciamento de estado global
 | Fetch API   | Comunicação com a API backend
 
+## Como Rodar o Projeto
+
+### Pré-requisitos
+
+- Node.js (versão 18 ou superior)
+- npm, yarn ou pnpm
+
+### Instalação
+
+1. Clone o repositório e navegue até a pasta do frontend:
+```bash
+cd frontend
+```
+
+2. Instale as dependências:
+```bash
+npm install
+# ou
+yarn install
+# ou
+pnpm install
+```
+
+3. Configure as variáveis de ambiente:
+```bash
+cp .env.local.example .env.local
+```
+
+Edite o arquivo `.env.local` e configure a URL da API backend:
+```
+NEXT_PUBLIC_API_URL=http://localhost:3001
+```
+
+### Executando em Desenvolvimento
+
+Para rodar a aplicação em modo de desenvolvimento:
+
+```bash
+npm run dev
+# ou
+yarn dev
+# ou
+pnpm dev
+```
+
+A aplicação estará disponível em [http://localhost:3000](http://localhost:3000).
+
+### Build de Produção
+
+Para gerar o build de produção:
+
+```bash
+npm run build
+npm start
+# ou
+yarn build
+yarn start
+# ou
+pnpm build
+pnpm start
+```
+
+### Outros Comandos
+
+- **Lint**: Verificar problemas no código
+```bash
+npm run lint
+```
+
 ## Abordagem de Implementação
 
 A interface foi estruturada com foco na separação clara entre operações seguras e funcionalidades de apresentação:
